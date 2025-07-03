@@ -1,0 +1,31 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Repo içeriğini çek
+      uses: actions/checkout@v3
+
+    - name: Docker kurulumu başlat
+      uses: docker/setup-buildx-action@v3
+
+    - name: auth-service için Docker image oluştur
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/auth-service:latest ./auth-service
+
+    - name: product-service için Docker image oluştur
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/product-service:latest ./product-service
+
+    - name: DockerHub giriş
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: auth-service image'ını pushla
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+
+    - name: product-service image'ını pushla
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/product-service:latest
